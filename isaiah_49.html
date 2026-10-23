@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>isaiah_49</title>
+<style>
+  :root { --bg:#FAF8F3; --ink:#1F2A24; --mute:#5E6B63; --acc:#2E7D4F; --hl:#AEDDBF; --bar:#1F3A2B; --fs:22px; }
+  * { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+  html { scroll-behavior:smooth; }
+  body { font-family:'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif; background:var(--bg); color:var(--ink); line-height:1.95; word-break:keep-all; padding-bottom:84px; }
+  .wrap { max-width:760px; margin:0 auto; padding:26px 20px 0; }
+  header h1 { font-size:30px; font-weight:900; line-height:1.4; letter-spacing:-0.01em; }
+  header .meta { color:var(--mute); font-size:16px; margin:6px 0 4px; }
+  header .rule { height:4px; width:64px; background:var(--acc); border-radius:4px; margin:14px 0 22px; }
+  #resume { display:none; background:#EAF3EC; border:2px solid #BFD9C7; border-radius:14px; padding:12px 16px; margin-bottom:18px; font-size:17px; }
+  #text p { font-size:var(--fs); margin-bottom:1.1em; }
+  #text h2.hd { font-size:calc(var(--fs) + 4px); font-weight:900; margin:1.6em 0 .6em; color:var(--acc); line-height:1.5; }
+  .seg { cursor:pointer; border-radius:8px; padding:1px 3px; -webkit-box-decoration-break:clone; box-decoration-break:clone; scroll-margin-top:24px; transition:background .2s; }
+  .seg.on { background:var(--hl); box-shadow:0 0 0 3px var(--hl); }
+  .bar { position:fixed; left:0; right:0; bottom:0; background:var(--bar); color:#fff; padding:0 12px calc(6px + env(safe-area-inset-bottom,0px)); box-shadow:0 -4px 18px rgba(0,0,0,.25); z-index:50; }
+  .prog { height:10px; background:rgba(255,255,255,.22); cursor:pointer; overflow:hidden; margin:0 -12px 6px; }
+  .prog i { display:block; height:100%; width:0; background:#8fe0a8; }
+  .bar .in { max-width:900px; margin:0 auto; display:flex; align-items:center; justify-content:center; gap:6px; flex-wrap:wrap; }
+  .tm { font-size:15px; font-variant-numeric:tabular-nums; white-space:nowrap; padding:0 6px; opacity:.95; }
+  button { font:inherit; font-weight:900; font-size:16px; border:0; border-radius:12px; padding:0 12px; height:44px; min-width:44px; background:rgba(255,255,255,.16); color:#fff; cursor:pointer; }
+  button:active { transform:scale(.96); }
+  button:focus-visible { outline:3px solid #FFE680; outline-offset:2px; }
+  #play { background:#3FAE6A; font-size:18px; min-width:100px; }
+  button.o { font-size:14px; min-width:40px; padding:0 10px; background:rgba(255,255,255,.1); }
+  #tolist { display:none; font-size:16px; color:var(--mute); text-decoration:none; font-weight:700; margin-bottom:6px; }
+  #nvnote { display:none; background:#FFF3DC; color:#1F2A24; border:2px solid #F0D49A; border-radius:14px; padding:10px 14px; margin:8px 0; font-size:17px; line-height:1.6; text-align:center; }
+  #nvnote button { background:var(--acc); color:#fff; padding:0 18px; margin-left:8px; font-size:17px; }
+  .nvcard { display:none; margin:34px 0 10px; background:#fff; border:2px solid #DCE6DF; border-radius:16px; padding:18px 20px; }
+  .nvcard .lb { color:var(--mute); font-size:16px; }
+  .nvcard .nm { font-size:calc(var(--fs) + 2px); font-weight:900; margin:4px 0 14px; line-height:1.5; }
+  .nvcard a.go { display:inline-block; background:var(--acc); color:#fff; text-decoration:none; font-weight:900; font-size:19px; border-radius:14px; padding:12px 22px; }
+  @keyframes pulse { 0%,100% { box-shadow:0 0 0 0 rgba(63,174,106,.75); } 50% { box-shadow:0 0 0 10px rgba(63,174,106,0); } }
+  #play.wait { animation:pulse 1.2s infinite; }
+  #resume button { background:var(--acc); color:#fff; height:auto; padding:8px 14px; margin-left:8px; font-size:16px; }
+  @media (max-width:640px) { header h1 { font-size:25px; } button { height:42px; padding:0 9px; } #play { min-width:84px; } }
+  @media print { .bar { display:none; } body { padding-bottom:0; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a id="tolist" href="#">← 목록으로</a>
+    <h1>isaiah_49</h1>
+    <div class="meta" id="meta"></div>
+    <div class="rule"></div>
+  </header>
+  <div id="resume"></div>
+  <main id="text"></main>
+  <div class="nvcard" id="nvcard"><div class="lb">다음 글</div><div class="nm" id="nvname"></div><a class="go" id="nvgo" href="#">다음 글 열기 ▶</a></div>
+</div>
+
+<div class="bar">
+  <div id="nvnote"></div>
+  <div class="prog" id="prog" aria-label="재생 위치"><i id="fill"></i></div>
+  <div class="in">
+    <button id="pt" class="o" aria-label="앞 글">앞 글</button>
+    <button id="prev" aria-label="앞 문장" title="앞 문장">⏮</button>
+    <button id="back" aria-label="10초 뒤로" title="10초 뒤로">↺10</button>
+    <button id="play" aria-label="재생">▶ 재생</button>
+    <button id="fwd" aria-label="10초 앞으로" title="10초 앞으로">10↻</button>
+    <button id="next" aria-label="다음 문장" title="다음 문장">⏭</button>
+    <button id="nt" class="o" aria-label="다음 글">다음 글</button>
+    <span class="tm"><span id="cur">0:00</span> / <span id="tot">0:00</span></span>
+    <button id="spd" class="o" aria-label="재생 속도">1.0x</button>
+    <button id="fsm" class="o" aria-label="글자 줄이기">가-</button>
+    <button id="fbg" class="o" aria-label="글자 키우기">가+</button>
+    <button id="fs" class="o" aria-label="전체 화면" title="전체 화면 (F 키)">⛶ 전체</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  const TITLE = "isaiah_49", AUDIO_SRC = "isaiah_49_2610230230.mp3", DUR = 476, SEGS = [{"t":"이사야 49장","s":0,"e":1.724,"p":true,"h":false},{"t":"제목 열방의 빛이 되는 종, 어미가 잊어도 나는 잊지 않는다","s":2.376,"e":6.77,"p":true,"h":false},{"t":"핵심 한 줄 종은 수고가 헛된 것 같아도 하나님께 보상을 맡기고, 하나님은 이 종을 통해 땅 끝까지 구원을 이르게 하시며 시온을 결코 잊지 않으십니다.","s":7.416,"e":17.25,"p":true,"h":false},{"t":"풀어 읽기","s":18.036,"e":19.106,"p":true,"h":false},{"t":"이 장은 이런 이야기입니다 42장에서 하나님이 소개하신 종이 이번에는 자기 입으로 말합니다.","s":19.944,"e":26.367,"p":false,"h":false},{"t":"이 종은 태에서부터 하나님이 부르셨고 입을 날카로운 칼같이 만드셨는데, 자기 수고가 헛된 것 같아 탄식합니다.","s":26.712,"e":34.55,"p":false,"h":false},{"t":"그러나 하나님은 \"네가 야곱 지파를 일으키는 것만으로는 가벼운 일이다.","s":34.884,"e":39.828,"p":false,"h":false},{"t":"내가 너를 이방의 빛으로 삼아 내 구원이 땅 끝까지 이르게 하리라\"고 하십니다.","s":40.032,"e":45.686,"p":true,"h":false},{"t":"이 장은 세 부분입니다.","s":46.332,"e":48.274,"p":false,"h":false},{"t":"종의 소명과 낙심, 하나님의 큰 약속, 그리고 \"시온이 하나님이 나를 버리셨다\"고 말하는 것에 대한 하나님의 응답입니다.","s":48.492,"e":57.651,"p":false,"h":false},{"t":"마지막에는 하나님이 어머니가 젖먹이를 잊을 수 있느냐고 물으십니다.","s":57.996,"e":62.596,"p":false,"h":false},{"t":"이 장은 53장으로 가는 큰 길 위에 있는 장입니다.","s":62.784,"e":66.693,"p":false,"h":false},{"t":"이 흐름을 기억하고 절마다 따라가 보겠습니다.","s":66.924,"e":70.2,"p":true,"h":false},{"t":"1절에서 4절, 종의 소명과 낙심 \"섬들아 내 말을 들으라.","s":70.848,"e":75.583,"p":false,"h":false},{"t":"먼 데 백성들아 자세히 들으라.\"","s":75.78,"e":78.086,"p":false,"h":false},{"t":"종이 말합니다.","s":78.3,"e":79.661,"p":false,"h":false},{"t":"\"여호와께서 태에서부터 나를 부르셨고 내 어머니의 복중에서부터 내 이름을 기억하셨다.\"","s":80.208,"e":86.394,"p":false,"h":false},{"t":"하나님이 내 입을 날카로운 칼같이 만드시고 손 그늘에 나를 숨기셨으며 나를 갈고 닦은 화살로 만들어 전통에 감추셨다고 합니다.","s":86.688,"e":95.185,"p":false,"h":false},{"t":"하나님이 종을 준비하셨지만 아직 쏘지 않으신 화살처럼 감추고 계셨다는 그림입니다.","s":95.544,"e":101.285,"p":false,"h":false},{"t":"그리고 하나님이 말씀하십니다.","s":101.664,"e":103.914,"p":false,"h":false},{"t":"\"너는 나의 종이요 내 영광을 네 속에서 나타낼 이스라엘이라.\"","s":104.112,"e":108.469,"p":false,"h":false},{"t":"여기서 종이 \"이스라엘\"이라고 불립니다.","s":108.684,"e":111.951,"p":false,"h":false},{"t":"그런데 4절에서 종은 이렇게 고백합니다.","s":112.176,"e":115.199,"p":false,"h":false},{"t":"\"나는 말하기를 내가 헛되이 수고하였으며 무익하게 무의미하게 내 힘을 다하였다 하였도다.\"","s":115.416,"e":121.42,"p":false,"h":false},{"t":"사람에게는 수고가 허사처럼 보였지만, 그는 덧붙입니다.","s":121.608,"e":126.151,"p":false,"h":false},{"t":"\"그러나 나의 정당함이 여호와께 있고 나의 상이 내 하나님께 있느니라.\"","s":126.36,"e":131.211,"p":false,"h":false},{"t":"사람들이 알아주지 않아도 하나님이 갚아 주신다는 믿음입니다.","s":131.436,"e":135.62,"p":true,"h":false},{"t":"5절에서 6절, 야곱을 일으키는 것은 가벼운 일이다 하나님이 종에게 말씀하십니다.","s":136.26,"e":142.096,"p":false,"h":false},{"t":"\"네가 나의 종이 되어 야곱의 지파들을 일으키며 이스라엘 중에 보전된 자를 돌아오게 할 것은 매우 쉬운 일이라.\"","s":142.308,"e":149.179,"p":false,"h":false},{"t":"그리고 더 큰 일을 말씀하십니다.","s":149.364,"e":151.736,"p":false,"h":false},{"t":"\"내가 또 너를 이방의 빛으로 삼아 나의 구원을 땅 끝까지 이르게 하리라.\"","s":151.956,"e":156.952,"p":false,"h":false},{"t":"이 종은 이스라엘을 돌아오게 하는 일 이상으로, 모든 민족에게 구원이 이르게 하는 일을 맡았습니다.","s":157.14,"e":163.649,"p":false,"h":false},{"t":"앞서 이 종이 \"이스라엘\"이라고 불렸는데 이 종이 이스라엘을 돌아오게 한다고 하니, 종은 이스라엘을 대표하면서 동시에 이스라엘을 구하는 분임을 보여 줍니다.","s":164.016,"e":174.688,"p":false,"h":false},{"t":"42장에서 \"눈먼 종 이스라엘\"과 \"온유한 종\"을 나눠 설명했던 것처럼, 완전한 이스라엘의 대표인 한 분이 이 일을 하신다고 읽는 것이 자연스럽습니다.","s":175.032,"e":185.931,"p":false,"h":false},{"t":"우리는 이분이 예수 그리스도라고 믿습니다.","s":186.264,"e":189.273,"p":false,"h":false},{"t":"신약에서 시므온과 바울이 이 구절을 예수 그리스도와 복음 전파에 적용합니다.","s":189.504,"e":195.013,"p":true,"h":false},{"t":"7절, 멸시받던 종이 높임받는다 하나님이 이 종에게 말씀하십니다.","s":195.804,"e":201.233,"p":false,"h":false},{"t":"사람에게 멸시를 받는 자, 백성에게 미움을 받는 자, 관원들에게 종이 된 자에게 \"왕들이 보고 일어서며 방백들이 경배하리니 이는 신실하신 여호와 이스라엘의 거룩한 자가 너를 택하였음이라\"고 하십니다.","s":201.6,"e":215.363,"p":false,"h":false},{"t":"52장 13절에서 \"내 종이 형통하고 높이 들린다\"고 했던 53장의 시작과 이어지는 말씀입니다.","s":215.712,"e":223.343,"p":false,"h":false},{"t":"낮아진 종이 높임받는 것은 하나님이 택하셨기 때문입니다.","s":223.704,"e":227.765,"p":true,"h":false},{"t":"8절에서 13절, 포로가 돌아오는 길 하나님이 말씀하십니다.","s":228.42,"e":232.954,"p":false,"h":false},{"t":"\"내가 은혜를 베풀 때에 너에게 응답하였고 구원의 날에 너를 도와주었나니.\"","s":233.172,"e":238.29,"p":false,"h":false},{"t":"이 종을 보호하여 백성의 언약이 되게 하시며 땅을 일으켜 황무하게 된 기업을 상속하게 하십니다.","s":238.5,"e":244.793,"p":false,"h":false},{"t":"그리고 갇힌 자에게 \"나오라\" 하시고 흑암에 있는 자에게 \"나타나라\" 하십니다.","s":245.16,"e":250.702,"p":false,"h":false},{"t":"그들이 길에서 먹고 모든 헐벗은 산에서 풀을 먹을 것이며, 주리거나 목마르지 않고 뜨거운 사막 바람이나 햇볕이 그들을 상하지 않게 합니다.","s":250.92,"e":260.293,"p":false,"h":false},{"t":"그들을 긍휼히 여기시는 분이 인도하시고 샘물 근원으로 이끌기 때문입니다.","s":260.64,"e":265.699,"p":false,"h":false},{"t":"하나님은 모든 산을 길로 만들고 대로를 높이실 것이며, 먼 곳에서, 북쪽과 서쪽에서, 시님 땅에서 사람들이 돌아옵니다.","s":265.896,"e":275.09,"p":false,"h":false},{"t":"하늘과 땅이 기뻐하고 산들이 소리 내어 노래합니다.","s":275.292,"e":278.984,"p":false,"h":false},{"t":"여호와께서 자기 백성을 위로하시고 그 고난받은 자를 긍휼히 여기시기 때문입니다.","s":279.18,"e":284.864,"p":true,"h":false},{"t":"14절에서 18절, 어미가 젖먹이를 잊을지라도 그런데 시온이 말합니다.","s":285.66,"e":291.259,"p":false,"h":false},{"t":"\"여호와께서 나를 버리시며 주께서 나를 잊으셨다 하였거니와.\"","s":291.456,"e":295.79,"p":false,"h":false},{"t":"포로 생활이 길어지자 하나님이 자기를 잊으셨다고 느끼는 것입니다.","s":295.992,"e":300.321,"p":false,"h":false},{"t":"이 말은 앞에서 말한 \"하나님의 기다리심이 우리 생각보다 길 수 있다\"는 것의 아픈 한 모습입니다.","s":300.528,"e":307.549,"p":false,"h":false},{"t":"하나님은 이렇게 대답하십니다.","s":307.908,"e":310.23,"p":false,"h":false},{"t":"\"여인이 어찌 그 젖먹이를 잊겠느냐 그가 비록 잊을지라도 나는 너를 잊지 아니할 것이라.\"","s":310.464,"e":316.283,"p":false,"h":false},{"t":"어머니의 사랑이 가장 깊은 사람의 사랑인데, 그조차 잊을 수 있다고 하시며 자기는 결코 잊지 않으신다고 하십니다.","s":316.476,"e":324.16,"p":false,"h":false},{"t":"그리고 16절이 놀랍습니다.","s":324.504,"e":326.785,"p":false,"h":false},{"t":"\"보라 내가 너를 내 손바닥에 새겼으며 너의 성벽이 항상 내 앞에 있나니.\"","s":327.024,"e":332.117,"p":false,"h":false},{"t":"하나님이 이 백성의 이름과 성벽을 자기 손바닥에 새기셨다는 것입니다.","s":332.316,"e":337.033,"p":false,"h":false},{"t":"지워지지 않게 새겨 두고 늘 보신다는 뜻입니다.","s":337.248,"e":340.645,"p":false,"h":false},{"t":"시온의 자녀들이 속히 돌아오고, 시온을 헐던 자들은 떠납니다.","s":340.848,"e":345.436,"p":false,"h":false},{"t":"너는 눈을 들어 사방을 보라, 그들이 다 모여 네게로 오리라고 하십니다.","s":345.636,"e":350.858,"p":false,"h":false},{"t":"시온은 그들을 신부의 장식처럼 두르게 됩니다.","s":351.072,"e":354.452,"p":true,"h":false},{"t":"19절에서 21절, 자녀가 없던 시온에 가득한 자녀 황무하고 파괴된 땅은 이제 거주민이 많아 좁아집니다.","s":355.104,"e":362.863,"p":false,"h":false},{"t":"시온이 자녀를 잃고 홀로 포로가 되어 쫓겨났는데 \"누가 이들을 낳았느냐, 나는 홀로 남았는데 이들은 어디서 왔느냐\"고 놀라서 말하게 됩니다.","s":363.204,"e":373.414,"p":false,"h":false},{"t":"하나님이 이 일을 하셨다는 것을 볼 때 그 놀람이 깊어질 것입니다.","s":373.752,"e":378.361,"p":true,"h":false},{"t":"22절에서 26절, 왕들이 안고 오며, 하나님이 싸우신다 하나님이 손을 열방에게 들고 깃발을 민족들에게 세우시면 그들이 이스라엘의 아들들을 품에 안고 딸들을 어깨에 메고 올 것입니다.","s":379.008,"e":392.4,"p":false,"h":false},{"t":"왕들이 양부가 되고 왕비들이 유모가 되어 얼굴을 땅에 대고 절하며 시온의 발의 티끌을 핥을 것입니다.","s":392.724,"e":399.396,"p":false,"h":false},{"t":"이로써 \"나는 여호와인 줄 알게 될 것이요 나를 앙망하는 자는 수치를 당하지 아니하리라\"고 하십니다.","s":399.744,"e":406.443,"p":false,"h":false},{"t":"사람들이 묻습니다.","s":406.8,"e":408.394,"p":false,"h":false},{"t":"\"용사에게서 빼앗은 것을 빼앗을 수 있느냐, 정당한 포로를 건져 낼 수 있겠느냐?\"","s":408.708,"e":414.202,"p":false,"h":false},{"t":"하나님이 대답하십니다.","s":414.432,"e":416.279,"p":false,"h":false},{"t":"\"용사의 포로도 빼앗기겠고 강한 자의 노략한 것도 건짐을 받을 것이니 이는 내가 너와 다투는 자와 다투고 네 자손을 내가 구원할 것임이라.\"","s":416.484,"e":425.681,"p":false,"h":false},{"t":"하나님이 직접 싸우시기 때문에 그 구원은 확실합니다.","s":425.88,"e":429.814,"p":false,"h":false},{"t":"그리고 압제자들은 서로를 먹고 자기 피에 취하게 됩니다.","s":430.02,"e":434.018,"p":false,"h":false},{"t":"이로써 모든 육체가 나 여호와가 네 구원자요 네 구속자 야곱의 전능자인 줄 알게 될 것이라고 하십니다.","s":434.232,"e":441.529,"p":true,"h":false},{"t":"이 장을 마치며 49장에서 가져갈 것은 이것입니다.","s":442.332,"e":446.254,"p":false,"h":false},{"t":"하나님이 부르신 종은 수고가 헛된 것 같아도 하나님께 보상을 맡기고, 그 종을 통해 구원이 땅 끝까지 이릅니다.","s":446.472,"e":454.253,"p":false,"h":false},{"t":"그리고 하나님이 잊으셨다고 느끼는 사람에게 하나님은 \"내가 너를 내 손바닥에 새겼다\"고 하십니다.","s":454.608,"e":461.582,"p":false,"h":false},{"t":"이 종은 우리를 위해 값을 치르실 예수 그리스도의 모습을 미리 보여 주는 분이며, 이 약속은 땅 끝의 우리에게까지 이릅니다.","s":461.952,"e":470.59,"p":false,"h":false},{"t":"50장은 이 종의 순종과 고난을 더 구체적으로 보여 줍니다.","s":470.916,"e":475.358,"p":true,"h":false}], NAV = {"prev":{"href":"isaiah_48.html","title":"isaiah_48"},"next":{"href":"isaiah_50.html","title":"isaiah_50"},"list":"index.html"};
+  const SPEEDS = [0.8, 1, 1.2, 1.5], FS = [18, 20, 22, 25, 28, 32];
+  const KEY = 'narr:' + TITLE + ':' + AUDIO_SRC;
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  let spd = 1, fsi = 2, last = -1, lastUser = 0, playing = false, tickId = 0;
+  const audio = new Audio(AUDIO_SRC);
+  audio.preload = 'metadata';
+
+  function pref(k, v) { try { if (v === undefined) { return localStorage.getItem(KEY + ':' + k); } localStorage.setItem(KEY + ':' + k, String(v)); } catch (e) { return null; } }
+  const savedSpd = parseInt(pref('spd'), 10); if (savedSpd >= 0 && savedSpd < SPEEDS.length) { spd = savedSpd; }
+  const savedFs = parseInt(pref('fs'), 10); if (savedFs >= 0 && savedFs < FS.length) { fsi = savedFs; }
+
+  function fmt(s) { s = Math.max(0, s || 0); const m = Math.floor(s / 60), x = Math.floor(s % 60); return m + ':' + String(x).padStart(2, '0'); }
+
+  /* 글 그리기 */
+  (function build() {
+    let html = '', para = '';
+    SEGS.forEach((g, i) => {
+      const span = '<span class="seg" id="g' + i + '" data-i="' + i + '">' + esc(g.t) + '</span> ';
+      if (g.h) { if (para) { html += '<p>' + para + '</p>'; para = ''; } html += '<h2 class="hd">' + span + '</h2>'; }
+      else { para += span; if (g.p) { html += '<p>' + para + '</p>'; para = ''; } }
+    });
+    if (para) { html += '<p>' + para + '</p>'; }
+    $('text').innerHTML = html;
+    $('meta').textContent = '듣는 시간 약 ' + fmt(DUR || (SEGS.length ? SEGS[SEGS.length - 1].e : 0)) + ' · 읽는 문장을 누르면 그 곳부터 들려요';
+    $('tot').textContent = fmt(DUR);
+  })();
+
+  function applyFs() { document.documentElement.style.setProperty('--fs', FS[fsi] + 'px'); }
+  function applySpd() { audio.playbackRate = SPEEDS[spd]; audio.defaultPlaybackRate = SPEEDS[spd]; $('spd').textContent = SPEEDS[spd].toFixed(1) + 'x'; }
+  applyFs(); applySpd();
+
+  /* 강조와 따라가기 */
+  window.addEventListener('wheel', () => { lastUser = Date.now(); }, { passive: true });
+  window.addEventListener('touchmove', () => { lastUser = Date.now(); }, { passive: true });
+  function idxAt(t) { let k = -1; for (let i = 0; i < SEGS.length; i++) { if (SEGS[i].s <= t + 0.03) { k = i; } else { break; } } return k; }
+  function mark(i, follow) {
+    if (i === last) { return; }
+    const old = $('g' + last); if (old) { old.classList.remove('on'); }
+    last = i;
+    const el = $('g' + i); if (!el) { return; }
+    el.classList.add('on');
+    if (follow && Date.now() - lastUser > 2500) { try { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {} }
+  }
+  function paint() {
+    const t = audio.currentTime || 0, d = audio.duration || DUR || 0;
+    $('cur').textContent = fmt(t);
+    if (d > 0) { $('fill').style.width = Math.min(100, t / d * 100) + '%'; $('tot').textContent = fmt(d); }
+    mark(idxAt(t), playing);
+  }
+  function loop() { paint(); if (playing) { tickId = requestAnimationFrame(loop); } }
+  function setPlaying(p) {
+    playing = p; $('play').textContent = p ? '❚❚ 일시정지' : '▶ 재생'; $('play').setAttribute('aria-label', p ? '일시정지' : '재생');
+    cancelAnimationFrame(tickId); if (p) { loop(); }
+  }
+  function play() { $('play').classList.remove('wait'); const pr = audio.play(); setPlaying(true); if (pr && pr.catch) { pr.catch(() => setPlaying(false)); } }
+  function pause() { audio.pause(); setPlaying(false); pref('pos', audio.currentTime || 0); }
+  function toggle() { if (playing) { pause(); } else { play(); } }
+  function seek(t) { audio.currentTime = Math.max(0, Math.min(t, (audio.duration || DUR || t))); paint(); }
+  function jump(i) { if (i < 0 || i >= SEGS.length) { return; } lastUser = 0; seek(SEGS[i].s); mark(i, true); if (!playing) { play(); } }
+
+  audio.addEventListener('timeupdate', () => { if (!playing) { paint(); } });
+  audio.addEventListener('loadedmetadata', () => { $('tot').textContent = fmt(audio.duration); });
+  audio.addEventListener('ended', () => { setPlaying(false); pref('pos', 0); const o = $('g' + last); if (o) { o.classList.remove('on'); } last = -1; });
+  /* 글 이동: 앞 글·다음 글 단추를 눌렀을 때만 이동합니다 (자동으로 넘어가지 않음) */
+  const navApi = { to: h => { location.href = h; } };
+  function goNext() { if (NAV && NAV.next) { pref('pos', 0); navApi.to(NAV.next.href + '#cont'); } }
+  (function () {
+    const pt = $('pt'), nt = $('nt');
+    if (!NAV) { pt.style.display = 'none'; nt.style.display = 'none'; return; }
+    if (NAV.prev) { pt.title = '앞 글: ' + NAV.prev.title; pt.onclick = () => navApi.to(NAV.prev.href); } else { pt.style.display = 'none'; }
+    if (NAV.next) {
+      nt.title = '다음 글: ' + NAV.next.title; nt.onclick = () => navApi.to(NAV.next.href + '#cont');
+      $('nvname').textContent = NAV.next.title; $('nvgo').href = NAV.next.href + '#cont'; $('nvcard').style.display = 'block';
+    } else { nt.style.display = 'none'; }
+    if (NAV.list) { const tl = $('tolist'); tl.href = NAV.list; tl.style.display = 'inline-block'; }
+  })();
+  audio.addEventListener('error', () => { $('meta').textContent = '소리 파일을 불러오지 못했습니다. mp3 파일이 같은 폴더에 있는지 확인해 주세요.'; });
+
+  /* 단추 */
+  $('play').onclick = toggle;
+  $('back').onclick = () => seek((audio.currentTime || 0) - 10);
+  $('fwd').onclick = () => seek((audio.currentTime || 0) + 10);
+  $('prev').onclick = () => { const i = idxAt(audio.currentTime || 0); const cur = SEGS[i]; jump((cur && (audio.currentTime - cur.s) > 2) ? i : Math.max(0, i - 1)); };
+  $('next').onclick = () => jump(Math.min(SEGS.length - 1, idxAt(audio.currentTime || 0) + 1));
+  $('spd').onclick = () => { spd = (spd + 1) % SPEEDS.length; applySpd(); pref('spd', spd); };
+  $('fsm').onclick = () => { fsi = Math.max(0, fsi - 1); applyFs(); pref('fs', fsi); };
+  $('fbg').onclick = () => { fsi = Math.min(FS.length - 1, fsi + 1); applyFs(); pref('fs', fsi); };
+  $('prog').onclick = e => { const r = $('prog').getBoundingClientRect(); const d = audio.duration || DUR || 0; seek(((e.clientX - r.left) / r.width) * d); };
+  $('text').addEventListener('click', e => { const s = e.target.closest ? e.target.closest('.seg') : null; if (s) { jump(+s.getAttribute('data-i')); } });
+  document.addEventListener('keydown', e => {
+    if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) { return; }
+    if (e.code === 'Space') { e.preventDefault(); toggle(); }
+    else if (e.code === 'ArrowLeft') { seek((audio.currentTime || 0) - 10); }
+    else if (e.code === 'ArrowRight') { seek((audio.currentTime || 0) + 10); }
+  });
+  window.addEventListener('pagehide', () => { pref('pos', audio.currentTime || 0); });
+
+  /* 앞 글이 끝나서 열린 경우: 처음부터 자동 재생을 시도하고, 폰이 막으면 ▶ 재생을 기다립니다 */
+  const arrived = location.hash === '#cont';
+  if (arrived) { pref('pos', 0); try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {} }
+  /* 이어 듣기 */
+  const pos = parseFloat(pref('pos'));
+  if (pos > 10 && pos < (DUR || 1e9) - 5) {
+    const r = $('resume'); r.style.display = 'block';
+    r.innerHTML = '지난번 <b>' + fmt(pos) + '</b>까지 들으셨어요. <button type="button" id="rb">이어 듣기</button>';
+    $('rb').onclick = () => { seek(pos); r.style.display = 'none'; play(); };
+  }
+  if (arrived) {
+    $('resume').style.display = 'none';
+    const n = $('nvnote'); n.style.display = 'block'; n.innerHTML = '다음 글을 열었습니다. 소리가 안 나오면 아래 <b>▶ 재생</b>을 눌러 주세요.';
+    $('play').classList.add('wait');
+    const pr = audio.play(); setPlaying(true); if (pr && pr.catch) { pr.catch(() => setPlaying(false)); }
+    audio.addEventListener('playing', () => { $('play').classList.remove('wait'); if (!n.getAttribute('data-cd')) { n.style.display = 'none'; } }, { once: true });
+  }
+  /* 전체 화면 (주소창 없이 글만 크게 보기). 지원하지 않는 기기에서는 단추를 숨깁니다 */
+  (function () {
+    const b = $('fs'), de = document.documentElement;
+    const req = de.requestFullscreen || de.webkitRequestFullscreen;
+    const ok = !!req && (document.fullscreenEnabled || document.webkitFullscreenEnabled);
+    if (!ok) { b.style.display = 'none'; return; }
+    const isFs = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
+    const upd = () => { b.textContent = isFs() ? '⛶ 나가기' : '⛶ 전체'; b.setAttribute('aria-label', isFs() ? '전체 화면 나가기' : '전체 화면'); };
+    b.onclick = () => { try { if (isFs()) { (document.exitFullscreen || document.webkitExitFullscreen).call(document); } else { req.call(de); } } catch (e) {} };
+    document.addEventListener('fullscreenchange', upd); document.addEventListener('webkitfullscreenchange', upd); upd();
+    /* F 키: 전체 화면 켜기/끄기 (한글 입력 상태에서도 같은 자리의 키면 동작) */
+    document.addEventListener('keydown', e => {
+      if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) { return; }
+      if (e.code === 'KeyF' && !e.ctrlKey && !e.metaKey && !e.altKey) { e.preventDefault(); b.onclick(); }
+    });
+  })();
+  window.__player = { jump, seek, toggle, mark, idxAt, audio, navApi, goNext };
+})();
+</script>
+</body>
+</html>
