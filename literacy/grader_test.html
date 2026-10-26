@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>AI 채점 시험</title>
+<link rel="stylesheet" href="assets/literacy.css">
+<script src="config.js"></script>
+<style>
+  table { width:100%; border-collapse:collapse; font-size:.72em; margin-top:12px; }
+  th, td { border:1px solid var(--line); padding:6px 8px; text-align:left; vertical-align:top; }
+  th { background:#EEF2EF; }
+  tr.bad td { background:var(--bad2); }
+  tr.good td { background:#F4FAF6; }
+  input[type=text] { width:100%; font:inherit; font-size:.8em; padding:10px 12px; border:2px solid var(--line); border-radius:10px; }
+  label { display:inline-block; margin:4px 12px 4px 0; font-size:.85em; }
+  .box { background:#fff; border-radius:18px; padding:18px 22px; box-shadow:0 2px 12px rgba(0,0,0,.07); margin-bottom:16px; }
+  .big { font-size:1.1em; font-weight:900; }
+  #bar { height:14px; background:#E4EAE6; border-radius:8px; overflow:hidden; margin:10px 0; }
+  #bar i { display:block; height:100%; width:0; background:var(--acc); }
+</style>
+</head>
+<body>
+<div class="w">
+  <h1>AI 채점 시험</h1>
+  <p class="sub">서버를 설치한 뒤, AI가 얼마나 정확히 채점하는지 직접 재 보는 페이지입니다. 시험이 끝나면 이 파일은 지우셔도 됩니다.</p>
+
+  <div class="box">
+    <p><b>1. 서버 주소</b></p>
+    <input type="text" id="url" placeholder="https://(이름).(계정).workers.dev">
+    <p class="note" id="urlnote"></p>
+    <p style="margin-top:14px"><b>2. 시험할 장</b></p>
+    <div id="chs"></div>
+    <p style="margin-top:10px"><b>3. 시험 크기</b></p>
+    <label><input type="radio" name="size" value="quick" checked> 빠른 시험 (문항마다 정답, 오독 하나, 낱말 나열 — 약 170번, 6분)</label><br>
+    <label><input type="radio" name="size" value="full"> 전체 시험 (350번, 12분)</label>
+    <p class="note">시험하는 동안 이 창을 닫지 마십시오. 사용한 만큼 API 요금이 나가며, 아래에 예상 요금이 표시됩니다.</p>
+    <button class="btn" id="start" type="button">시험 시작</button>
+    <button class="btn ghost" id="stop" type="button" disabled>중단</button>
+  </div>
+
+  <div class="box" id="run" hidden>
+    <p class="big" id="prog">0 / 0</p>
+    <div id="bar"><i></i></div>
+    <div id="sum"></div>
+    <table id="tbl"><thead><tr><th>장·문항</th><th>종류</th><th>쓴 답</th><th>기대</th><th>AI 판정</th><th>AI 설명</th></tr></thead><tbody></tbody></table>
+  </div>
+</div>
+<script>
+(function () {
+  'use strict';
+  var cfg = window.LIT_CONFIG || {}, $ = function (id) { return document.getElementById(id); };
+  $('url').value = cfg.gradeUrl || '';
+  $('urlnote').textContent = cfg.gradeUrl ? '설정 파일(config.js)에 적힌 주소를 불러왔습니다.' : '설정 파일에 주소가 아직 없습니다. 서버를 만들고 나온 주소를 여기에 붙여 넣으십시오.';
+  [1, 2, 3, 4, 5].forEach(function (c) { $('chs').insertAdjacentHTML('beforeend', '<label><input type="checkbox" class="ch" value="' + c + '" checked> ' + c + '장</label>'); });
+  var stopped = false, cases = [];
+  fetch('grader_cases.json').then(function (r) { return r.json(); }).then(function (d) { cases = d; }).catch(function () { $('urlnote').textContent += ' (시험 사례 파일 grader_cases.json 을 불러오지 못했습니다)'; });
+
+  function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+  async function grade(url, c) {
+    for (var t = 0; t < 2; t++) {
+      var r = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ch: c.ch, q: c.q, a: c.a }) });
+      if (r.status === 429 && t === 0) { await sleep(20000); continue; }
+      var d = await r.json().catch(function () { return {}; });
+      return { status: r.status, d: d };
+    }
+  }
+  $('stop').onclick = function () { stopped = true; };
+  $('start').onclick = async function () {
+    var url = $('url').value.trim(); if (!url) { alert('서버 주소를 먼저 적어 주십시오.'); return; }
+    var chs = [].map.call(document.querySelectorAll('.ch:checked'), function (x) { return +x.value; });
+    var quick = document.querySelector('input[name=size]:checked').value === 'quick';
+    var list = cases.filter(function (c) { return chs.indexOf(c.ch) >= 0 && (!quick || ['정답(한 줄)', '오독', '낱말만 나열'].indexOf(c.kind) >= 0); });
+    if (quick) { var seen = {}; list = list.filter(function (c) { if (c.kind !== '오독') { return true; } var k = c.ch + '-' + c.q; if (seen[k]) { return false; } seen[k] = 1; return true; }); }
+    if (!list.length) { alert('시험할 사례가 없습니다.'); return; }
+    stopped = false; $('start').disabled = true; $('stop').disabled = false; $('run').hidden = false;
+    var tb = document.querySelector('#tbl tbody'); tb.innerHTML = '';
+    var st = { n: 0, errs: 0, tin: 0, tout: 0, byKind: {} };
+    for (var i = 0; i < list.length && !stopped; i++) {
+      var c = list[i], res;
+      try { res = await grade(url, c); } catch (e) { res = { status: 0, d: {} }; }
+      var v = res.d && res.d.verdict, okVerdict = v === 'ok';
+      var pass = c.expect === 'ok' ? okVerdict : (v === 'bad' || v === 'unsure');
+      if (!v) { st.errs++; }
+      if (res.d && res.d.tokens) { st.tin += res.d.tokens.in || 0; st.tout += res.d.tokens.out || 0; }
+      var k = st.byKind[c.kind] = st.byKind[c.kind] || { n: 0, pass: 0, ok: 0, bad: 0, unsure: 0 };
+      k.n++; if (pass) { k.pass++; } if (v) { k[v]++; }
+      st.n++;
+      var tr = document.createElement('tr'); tr.className = pass ? 'good' : 'bad';
+      [c.ch + '장 ' + c.q + '번', c.kind, c.a.slice(0, 60), c.expect === 'ok' ? '맞음(ok)' : '맞다고 하면 안 됨', v ? ({ ok: '맞음', bad: '다름', unsure: '판단 어려움' }[v]) : ('오류 ' + res.status), (res.d && (res.d.why || res.d.error)) || ''].forEach(function (t) { var td = document.createElement('td'); td.textContent = t; tr.appendChild(td); });
+      tb.insertBefore(tr, tb.firstChild);
+      $('prog').textContent = st.n + ' / ' + list.length; $('bar').firstChild.style.width = Math.round(st.n * 100 / list.length) + '%';
+      var cost = (st.tin * 0.10 + st.tout * 0.50) / 1e6;
+      var h = '<p><b>결과</b></p><ul style="margin-left:1.2em">';
+      Object.keys(st.byKind).forEach(function (kk) { var x = st.byKind[kk]; var lab = (kk.indexOf('정답') === 0 || kk.indexOf('선생님') === 0) ? '맞다고 인정한 수 ' + x.ok + '/' + x.n : '맞다고 잘못 인정한 수 ' + x.ok + '/' + x.n + ' (다름 ' + x.bad + ', 판단 어려움 ' + x.unsure + ')'; h += '<li>' + kk + ' — ' + lab + '</li>'; });
+      h += '</ul><p class="note">서버 오류·형식 오류 ' + st.errs + '건 · 쓴 토큰 입력 ' + st.tin.toLocaleString() + ' / 출력 ' + st.tout.toLocaleString() + ' · 예상 요금 약 $' + cost.toFixed(4) + ' (Haiku 5.5 요금 가정. 실제 요금은 API 사용량 화면에서 확인하십시오)</p>';
+      $('sum').innerHTML = h;
+      await sleep(2100);
+    }
+    $('start').disabled = false; $('stop').disabled = true;
+    $('prog').textContent += stopped ? ' (중단됨)' : ' 끝';
+  };
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>이사야 문해력 점검</title>
+<!--OG-->
+<meta name="description" content="신학 이전에, 문장부터 제대로 읽고 있는지 확인해 봅니다. 이사야 66장.">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:site_name" content="이사야 문해력 점검">
+<meta property="og:title" content="이사야 문해력 점검">
+<meta property="og:description" content="신학 이전에, 문장부터 제대로 읽고 있는지 확인해 봅니다. 이사야 66장.">
+<meta property="og:url" content="https://jeonsd.github.io/isaiah/literacy/">
+<meta property="og:image" content="https://jeonsd.github.io/isaiah/literacy/og.png">
+<meta property="og:image:width" content="1300">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="이사야 문해력 점검">
+<meta name="twitter:image" content="https://jeonsd.github.io/isaiah/literacy/og.png">
+<!--/OG-->
+<style>
+  :root { --bg:#FAF8F3; --ink:#1F2A24; --mute:#5E6B63; --acc:#2E7D4F; --acc2:#EAF3EC; --line:#D9E2DB; --bad:#B3402A; --bad2:#FBEBE6; --fs:21px; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif; background:var(--bg); color:var(--ink); font-size:var(--fs); line-height:1.8; padding:28px 16px 80px; word-break:keep-all; }
+  .w { max-width:720px; margin:0 auto; }
+  h1 { font-size:30px; font-weight:900; line-height:1.35; margin-bottom:6px; }
+  .sub { color:var(--mute); margin-bottom:22px; }
+  .intro { background:#fff; border-radius:18px; padding:20px 22px; box-shadow:0 2px 12px rgba(0,0,0,.07); border-left:8px solid var(--acc); margin-bottom:18px; }
+  .intro p + p { margin-top:.7em; } .em { font-weight:900; color:var(--acc); }
+  .map { background:#fff; border-radius:18px; padding:18px 22px; box-shadow:0 2px 12px rgba(0,0,0,.07); border-left:8px solid #1F3A2B; margin-bottom:18px; display:none; }
+  .map b { font-weight:900; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:12px; list-style:none; }
+  .cell a, .cell .off { display:flex; flex-direction:column; justify-content:center; min-height:84px; padding:12px 14px; border-radius:16px; text-decoration:none; color:inherit; background:#fff; box-shadow:0 2px 10px rgba(0,0,0,.07); border-left:8px solid var(--acc); }
+  .cell .off { background:#F3F3F1; border-left-color:#C9CFCB; color:#8B958F; box-shadow:none; }
+  .cell a:focus-visible { outline:3px solid #FFB300; outline-offset:2px; }
+  .cell .n { font-weight:900; font-size:1.05em; }
+  .cell .s { font-size:.72em; color:var(--mute); line-height:1.4; }
+  .cell .s.bad { color:var(--bad); font-weight:700; } .cell .s.ok { color:#1F5B38; font-weight:700; }
+  .foot { color:var(--mute); font-size:.78em; margin-top:22px; }
+  @media (max-width:480px) { :root { --fs:20px; } h1 { font-size:26px; } .grid { grid-template-columns:repeat(2, 1fr); } }
+</style>
+<script src="manifest.js"></script>
+</head>
+<body>
+<div class="w">
+  <h1>이사야 문해력 점검</h1>
+  <p class="sub">신학 이전에, 문장부터 제대로 읽고 있는지 확인해 봅니다</p>
+  <div class="intro">
+    <p>성경은 간단히 이해되는 책이 아닙니다. <span class="em">그러므로 정독은 필수입니다.</span> 한국교회는 다독을 많이 권하기에 읽은 양만 잽니다. 여러분이 과연 제대로 읽고 있는지, 우리도 모르게 잘못 읽고 있지는 않은지, 문해력만이라도 점검받아 보시기 바랍니다.</p>
+    <p>장을 하나 골라 먼저 그 장을 읽으신 뒤, 문항마다 답을 고르고 확정해 보십시오. 본문과 다르게 읽은 곳을 알려 드립니다. 점수를 매기는 것이 아니라, 틀린 곳을 아는 것이 목적입니다.</p>
+  </div>
+  <div class="map" id="map" aria-live="polite"></div>
+  <ul class="grid" id="grid"></ul>
+  <p class="foot">풀이한 기록은 이 기기의 브라우저에만 저장되며 어디로도 전송되지 않습니다. 아직 만들어지지 않은 장은 회색으로 표시됩니다.</p>
+</div>
+<script>
+(function () {
+  'use strict';
+  var MAN = window.MANIFEST || { total: 66, ready: {} };
+  var grid = document.getElementById('grid'), tdone = 0, tgap = 0, tch = 0;
+  function el(tag, cls, text) { var e = document.createElement(tag); if (cls) { e.className = cls; } if (text != null) { e.textContent = text; } return e; }
+  for (var c = 1; c <= (MAN.total || 66); c++) {
+    var li = el('li', 'cell'), n = MAN.ready[c];
+    if (n) {
+      var a = el('a'); a.href = 'ch' + (c < 10 ? '0' : '') + c + '/'; a.appendChild(el('span', 'n', c + '장'));
+      var st = null; try { st = JSON.parse(localStorage.getItem('isaiah-lit2-' + c) || 'null'); } catch (e) {}
+      var sm = st && st.sum, line, cls = 's';
+      if (sm && sm.done >= sm.n && sm.n) { var gap = sm.bad + sm.x; line = gap ? '다르게 읽거나 몰랐던 곳 ' + gap + '곳' : '모두 본문대로 읽음'; cls = 's ' + (gap ? 'bad' : 'ok'); tdone++; tgap += gap; }
+      else if (sm && sm.done) { line = '진행 중 ' + sm.done + '/' + sm.n; }
+      else { line = '문항 ' + n + '개'; }
+      a.appendChild(el('span', cls, line)); li.appendChild(a);
+    } else { var off = el('div', 'off'); off.appendChild(el('span', 'n', c + '장')); off.appendChild(el('span', 's', '준비 중')); li.appendChild(off); }
+    grid.appendChild(li);
+  }
+  if (tdone) {
+    var m = document.getElementById('map'); m.style.display = 'block';
+    m.innerHTML = '';
+    var p = el('p'); p.appendChild(document.createTextNode('끝까지 풀어 본 장 '));
+    p.appendChild(el('b', null, tdone + '개')); p.appendChild(document.createTextNode(' 가운데, 본문과 다르게 읽거나 몰랐던 곳은 모두 '));
+    p.appendChild(el('b', null, tgap + '곳')); p.appendChild(document.createTextNode('입니다. 그 구절들을 천천히 다시 읽어 보십시오.')); m.appendChild(p);
+  }
+})();
+</script>
+</body>
+</html>
